@@ -1,7 +1,3 @@
-'''
-This script handles the training process.
-'''
-
 import argparse
 import math
 import time
@@ -14,17 +10,16 @@ import os
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
-from torchtext.data import Field, Dataset, BucketIterator
+from torchtext.data import Dataset, BucketIterator
 from torchtext.datasets import TranslationDataset
 
-import Constants
-from Models import Transformer
-from Optim import ScheduledOptim
+import transformer.Constants as Constants
+from transformer.Models import Transformer
+from transformer.Optim import ScheduledOptim
 
 
 def cal_performance(pred, gold, trg_pad_idx, smoothing=False):
-    ''' Apply label smoothing if needed '''
-
+    """Apply label smoothing if needed"""
     loss = cal_loss(pred, gold, trg_pad_idx, smoothing=smoothing)
 
     pred = pred.max(1)[1]
@@ -37,10 +32,8 @@ def cal_performance(pred, gold, trg_pad_idx, smoothing=False):
 
 
 def cal_loss(pred, gold, trg_pad_idx, smoothing=False):
-    ''' Calculate cross entropy loss, apply label smoothing if needed. '''
-
+    """Calculate cross entropy loss, apply label smoothing if needed."""
     gold = gold.contiguous().view(-1)
-
     if smoothing:
         eps = 0.1
         n_class = pred.size(1)
@@ -54,26 +47,27 @@ def cal_loss(pred, gold, trg_pad_idx, smoothing=False):
         loss = loss.masked_select(non_pad_mask).sum()  # average later
     else:
         loss = F.cross_entropy(pred, gold, ignore_index=trg_pad_idx, reduction='sum')
+
     return loss
 
 
 def patch_src(src, pad_idx):
     src = src.transpose(0, 1)
+
     return src
 
 
 def patch_trg(trg, pad_idx):
     trg = trg.transpose(0, 1)
     trg, gold = trg[:, :-1], trg[:, 1:].contiguous().view(-1)
+
     return trg, gold
 
 
 def train_epoch(model, training_data, optimizer, opt, device, smoothing):
-    ''' Epoch operation in training phase'''
-
+    """Epoch operation in training phase"""
     model.train()
     total_loss, n_word_total, n_word_correct = 0, 0, 0 
-
     desc = '  - (Training)   '
     for batch in tqdm(training_data, mininterval=2, desc=desc, leave=False):
 
@@ -98,15 +92,14 @@ def train_epoch(model, training_data, optimizer, opt, device, smoothing):
 
     loss_per_word = total_loss/n_word_total
     accuracy = n_word_correct/n_word_total
+
     return loss_per_word, accuracy
 
 
 def eval_epoch(model, validation_data, device, opt):
-    ''' Epoch operation in evaluation phase '''
-
+    """Epoch operation in evaluation phase"""
     model.eval()
     total_loss, n_word_total, n_word_correct = 0, 0, 0
-
     desc = '  - (Validation) '
     with torch.no_grad():
         for batch in tqdm(validation_data, mininterval=2, desc=desc, leave=False):
@@ -127,12 +120,12 @@ def eval_epoch(model, validation_data, device, opt):
 
     loss_per_word = total_loss/n_word_total
     accuracy = n_word_correct/n_word_total
+
     return loss_per_word, accuracy
 
 
 def train(model, training_data, validation_data, optimizer, device, opt):
-    ''' Start training '''
-
+    """Start training"""
     # Use tensorboard to plot curves, e.g. perplexity, accuracy, learning rate
     if opt.use_tb:
         print("[Info] Use Tensorboard")
@@ -200,11 +193,10 @@ def train(model, training_data, validation_data, optimizer, device, opt):
             tb_writer.add_scalar('learning_rate', lr, epoch_i)
 
 def main():
-    ''' 
+    """
     Usage:
     python train.py -data_pkl m30k_deen_shr.pkl -log m30k_deen_shr -embs_share_weight -proj_share_weight -label_smoothing -output_dir output -b 256 -warmup 128000
-    '''
-
+    """
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-data_pkl', default=None)     # all-in-1 data pickle or bpe field
@@ -252,17 +244,17 @@ def main():
         random.seed(opt.seed)
 
     if not opt.output_dir:
-        print('No experiment result will be saved.')
+        print("No experiment result will be saved.")
         raise
 
     if not os.path.exists(opt.output_dir):
         os.makedirs(opt.output_dir)
 
     if opt.batch_size < 2048 and opt.n_warmup_steps <= 4000:
-        print('[Warning] The warmup steps may be not enough.\n'\
-              '(sz_b, warmup) = (2048, 4000) is the official setting.\n'\
-              'Using smaller batch w/o longer warmup may cause '\
-              'the warmup stage ends with only little data trained.')
+        print("[Warning] The warmup steps may be not enough.\n"\
+              "(sz_b, warmup) = (2048, 4000) is the official setting.\n"\
+              "Using smaller batch w/o longer warmup may cause "\
+              "the warmup stage ends with only little data trained.")
 
     device = torch.device('cuda' if opt.cuda else 'cpu')
 
@@ -332,6 +324,7 @@ def prepare_dataloaders_from_bpe_files(opt, device):
 
     train_iterator = BucketIterator(train, batch_size=batch_size, device=device, train=True)
     val_iterator = BucketIterator(val, batch_size=batch_size, device=device)
+
     return train_iterator, val_iterator
 
 
@@ -349,7 +342,7 @@ def prepare_dataloaders(opt, device):
     #========= Preparing Model =========#
     if opt.embs_share_weight:
         assert data['vocab']['src'].vocab.stoi == data['vocab']['trg'].vocab.stoi, \
-            'To sharing word embedding the src/trg word2idx table shall be the same.'
+            "To sharing word embedding the src/trg word2idx table shall be the same."
 
     fields = {'src': data['vocab']['src'], 'trg':data['vocab']['trg']}
 
@@ -362,5 +355,5 @@ def prepare_dataloaders(opt, device):
     return train_iterator, val_iterator
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,19 +1,16 @@
-''' Handling the data io '''
 import os
 import argparse
-import logging
 import dill as pickle
 import urllib
 from tqdm import tqdm
 import sys
 import codecs
 import spacy
-import torch
 import tarfile
 import torchtext.data
 import torchtext.datasets
 from torchtext.datasets import TranslationDataset
-import Constants
+import transformer.Constants as Constants
 from learn_bpe import learn_bpe
 from apply_bpe import BPE
 

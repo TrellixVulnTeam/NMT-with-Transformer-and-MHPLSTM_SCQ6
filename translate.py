@@ -1,18 +1,15 @@
-''' Translate input text with trained model. '''
-
 import torch
 import argparse
 import dill as pickle
 from tqdm import tqdm
 
-import Constants
+import transformer.Constants as Constants
 from torchtext.data import Dataset
-from Models import Transformer
-from Translator import Translator
+from transformer.Models import Transformer
+from transformer.Translator import Translator
 
 
 def load_model(opt, device):
-
     checkpoint = torch.load(opt.model, map_location=device)
     model_opt = checkpoint['settings']
 
@@ -35,19 +32,20 @@ def load_model(opt, device):
         dropout=model_opt.dropout).to(device)
 
     model.load_state_dict(checkpoint['model'])
-    print('[Info] Trained model state loaded.')
+    print("[Info] Trained model state loaded.")
+
     return model 
 
 
 def main():
-    '''Main Function'''
+    """Main Function"""
 
     parser = argparse.ArgumentParser(description='translate.py')
 
     parser.add_argument('-model', required=True,
-                        help='Path to model weight file')
+                        help="Path to model weight file")
     parser.add_argument('-data_pkl', required=True,
-                        help='Pickle file with both instances and vocabulary.')
+                        help="Pickle file with both instances and vocabulary.")
     parser.add_argument('-output', default='pred.txt',
                         help="""Path to output the predictions (each line will
                         be the decoded sequence""")
@@ -100,10 +98,10 @@ def main():
             #print(pred_line)
             f.write(pred_line.strip() + '\n')
 
-    print('[Info] Finished.')
+    print("[Info] Finished.")
 
 if __name__ == "__main__":
-    '''
+    """
     Usage: python translate.py -model trained.chkpt -data multi30k.pt -no_cuda
-    '''
+    """
     main()

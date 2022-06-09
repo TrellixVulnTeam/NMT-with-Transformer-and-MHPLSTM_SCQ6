@@ -12,14 +12,10 @@ Proceedings of the 54th Annual Meeting of the Association for Computational Ling
 """
 
 from __future__ import unicode_literals
-
-import os
 import sys
-import inspect
 import codecs
 import re
 import copy
-import warnings
 from collections import defaultdict, Counter
 
 

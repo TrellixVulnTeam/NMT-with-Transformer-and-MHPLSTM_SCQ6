@@ -12,15 +12,9 @@ Proceedings of the 54th Annual Meeting of the Association for Computational Ling
 """
 
 from __future__ import unicode_literals, division
-
-import sys
-import os
-import inspect
-import codecs
-import io
 import re
-import warnings
 import random
+import sys
 
 
 class BPE(object):
