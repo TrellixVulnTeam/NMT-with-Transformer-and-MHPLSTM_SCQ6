@@ -1,5 +1,8 @@
 from sklearn.feature_extraction.text import CountVectorizer
 import torch
+import torch.nn as nn
+import re
+import numpy as np
 
 
 def build_vectorizer_and_vocab(sentences):
@@ -12,13 +15,43 @@ def build_vectorizer_and_vocab(sentences):
     return vectorizer, vocab, vocab_size
 
 
-def bag_of_words_presentation(sentence, vectorizer, vocab_size):
+def bag_of_words_presentation(sentence, vectorizer, vocab, vocab_size):
     sentence = sentence.split()
-    outputs = torch.zeros(1, vocab_size)
 
-    for i in range(1, vocab_size):
+    outputs = [0] * vocab_size
+    input_step_0 = re.sub(r'[^\w\s]', '', sentence[0]).lower()
+
+    if input_step_0 in vocab:
+        input_step_0_idx = vocab[input_step_0]
+    else:
+        input_step_0_idx = len(vocab)
+        
+    outputs.append(float(input_step_0_idx))
+    outputs = torch.tensor(outputs).reshape((1, vocab_size + 1))
+
+    for i in range(1, len(sentence)):
         input = [' '.join(sentence[:i])]
-        output = torch.tensor(vectorizer.transform(input).toarray())
+        output = vectorizer.transform(input).toarray()
+        input_step_t = sentence[i]
+        input_step_t = re.sub(r'[^\w\s]', '', input_step_t).lower()
+
+        if input_step_t in vocab:
+            input_step_t_idx = vocab[input_step_t]
+        else:
+            input_step_t_idx = len(vocab)
+
+        output = np.append(output, float(input_step_t_idx))
+        output = torch.tensor(output).reshape((1, vocab_size + 1))
         outputs = torch.cat((outputs, output), dim=0)
 
     return outputs
+
+
+class BagOfWord(nn.Module):
+    """Preprocess data"""
+    def __init__(self, sentences):
+        super(BagOfWord, self).__init__()
+        self.vectorizer, self.vocab, self.vocab_size = build_vectorizer_and_vocab(sentences)
+
+    def forward(self, input):
+        return bag_of_words_presentation(input, self.vectorizer, self.vocab, self.vocab_size)
