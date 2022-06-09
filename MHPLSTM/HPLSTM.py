@@ -33,4 +33,4 @@ class HPLSTM(nn.Module):
 
     def forward_1half(self, inputs):
         bag_of_words = self.bag_of_words
-        inputs = 
+        inputs = 2
