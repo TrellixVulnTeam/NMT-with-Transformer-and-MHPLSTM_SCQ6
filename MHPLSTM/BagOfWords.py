@@ -22,6 +22,8 @@ def bag_of_words_presentation(sentence, vectorizer):
         input_ith = torch.tensor(vectorizer.transform(input).toarray(), dtype=torch.float32)
         i_vectors.append(input_ith)
 
+    i_vectors = torch.stack([i_vector.squeeze() for i_vector in i_vectors])
+
     return i_vectors
 
 

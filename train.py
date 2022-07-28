@@ -67,10 +67,9 @@ def patch_trg(trg, pad_idx):
 def train_epoch(model, training_data, optimizer, opt, device, smoothing):
     """Epoch operation in training phase"""
     model.train()
-    total_loss, n_word_total, n_word_correct = 0, 0, 0 
+    total_loss, n_word_total, n_word_correct = 0, 0, 0
     desc = '  - (Training)   '
     for batch in tqdm(training_data, mininterval=2, desc=desc, leave=False):
-
         # prepare data
         src_seq = patch_src(batch.src, opt.src_pad_idx).to(device)
         trg_seq, gold = map(lambda x: x.to(device), patch_trg(batch.trg, opt.trg_pad_idx))
@@ -103,7 +102,6 @@ def eval_epoch(model, validation_data, device, opt):
     desc = '  - (Validation) '
     with torch.no_grad():
         for batch in tqdm(validation_data, mininterval=2, desc=desc, leave=False):
-
             # prepare data
             src_seq = patch_src(batch.src, opt.src_pad_idx).to(device)
             trg_seq, gold = map(lambda x: x.to(device), patch_trg(batch.trg, opt.trg_pad_idx))
@@ -234,7 +232,6 @@ def main():
     opt.cuda = not opt.no_cuda
     opt.d_word_vec = opt.d_model
 
-    # https://pytorch.org/docs/stable/notes/randomness.html
     # For reproducibility
     if opt.seed is not None:
         torch.manual_seed(opt.seed)

@@ -26,6 +26,9 @@ class FirstModule(nn.Module):
             i_vectors.shape: (seq_length, input_size)
         """
         i_vectors = inputs
+        seq_length = i_vectors.size(0)
+        i_vectors = i_vectors.chunk(seq_length)
+        
         s_vectors = []
         s_ith = torch.zeros(1, self.input_size)
         s_vectors.append(s_ith)
@@ -74,6 +77,10 @@ class SecondModule(nn.Module):
             c_vectors.shape: (seq_length, hidden_size)
         """
         i_vectors, c_vectors = inputs
+        seq_length = i_vectors.size(0)
+        i_vectors = i_vectors.chunk(seq_length)
+        c_vectors = c_vectors.chunk(seq_length)
+
         ic_vectors = []
         for i in range(len(i_vectors)):
             ic_vectors.append(torch.cat((i_vectors[i], c_vectors[i]), dim=1))

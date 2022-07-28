@@ -23,9 +23,7 @@ class PositionalEncoding(nn.Module):
         # Not a parameter
         self.register_buffer('pos_table', self._get_sinusoid_encoding_table(n_position, d_hid))
 
-
     def _get_sinusoid_encoding_table(self, n_position, d_hid):
-        """Sinusoid position encoding table"""
         def get_position_angle_vec(position):
             return [position / np.power(10000, 2 * (hid_j // 2) / d_hid) for hid_j in range(d_hid)]
 
@@ -35,13 +33,11 @@ class PositionalEncoding(nn.Module):
 
         return torch.FloatTensor(sinusoid_table).unsqueeze(0)
 
-
     def forward(self, x):
         return x + self.pos_table[:, :x.size(1)].clone().detach()
 
 
 class Encoder(nn.Module):
-    """A encoder model with self attention mechanism."""
     def __init__(
             self, n_src_vocab, d_word_vec, n_layers, n_head, d_k, d_v,
             d_model, d_inner, pad_idx, dropout=0.1, n_position=200, scale_emb=False):
@@ -56,10 +52,8 @@ class Encoder(nn.Module):
         self.scale_emb = scale_emb
         self.d_model = d_model
 
-
     def forward(self, src_seq, src_mask, return_attns=False):
         enc_slf_attn_list = []
-        # Forward
         enc_output = self.src_word_emb(src_seq)
         if self.scale_emb:
             enc_output *= self.d_model ** 0.5
@@ -77,7 +71,6 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    """A decoder model with self attention mechanism."""
     def __init__(
             self, n_trg_vocab, d_word_vec, n_layers, n_head, d_k, d_v,
             d_model, d_inner, pad_idx, n_position=200, dropout=0.1, scale_emb=False):
@@ -92,10 +85,9 @@ class Decoder(nn.Module):
         self.scale_emb = scale_emb
         self.d_model = d_model
 
-
     def forward(self, trg_seq, trg_mask, enc_output, src_mask, return_attns=False):
         dec_slf_attn_list, dec_enc_attn_list = [], []
-        # Forward
+        
         dec_output = self.trg_word_emb(trg_seq)
         if self.scale_emb:
             dec_output *= self.d_model ** 0.5
@@ -115,7 +107,6 @@ class Decoder(nn.Module):
 
 
 class Transformer(nn.Module):
-    """A sequence to sequence model with attention mechanism."""
     def __init__(
             self, n_src_vocab, n_trg_vocab, src_pad_idx, trg_pad_idx,
             d_word_vec=512, d_model=512, d_inner=2048,
@@ -130,8 +121,8 @@ class Transformer(nn.Module):
         # In the embedding layers, we multiply those weights by \sqrt{d_model}".
         #
         # Options here:
-        #   'emb': multiply \sqrt{d_model} to embedding output
-        #   'prj': multiply (\sqrt{d_model} ^ -1) to linear projection output
+        #   'emb': multiply sqrt{d_model} to embedding output
+        #   'prj': multiply (sqrt{d_model} ^ -1) to linear projection output
         #   'none': no multiplication
         assert scale_emb_or_prj in ['emb', 'prj', 'none']
         scale_emb = (scale_emb_or_prj == 'emb') if trg_emb_prj_weight_sharing else False
@@ -156,9 +147,7 @@ class Transformer(nn.Module):
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p) 
 
-        assert d_model == d_word_vec, \
-        'To facilitate the residual connections, \
-         the dimensions of all module outputs shall be the same.'
+        assert d_model == d_word_vec, 'To facilitate the residual connections, the dimensions of all module outputs shall be the same.'
 
         if trg_emb_prj_weight_sharing:
             # Share the weight between target word embedding & last dense layer
@@ -166,7 +155,6 @@ class Transformer(nn.Module):
 
         if emb_src_trg_weight_sharing:
             self.encoder.src_word_emb.weight = self.decoder.trg_word_emb.weight
-
 
     def forward(self, src_seq, trg_seq):
         src_mask = get_pad_mask(src_seq, self.src_pad_idx)

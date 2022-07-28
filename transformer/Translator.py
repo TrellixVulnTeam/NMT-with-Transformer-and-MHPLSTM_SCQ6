@@ -28,13 +28,11 @@ class Translator(nn.Module):
             'len_map', 
             torch.arange(1, max_seq_len + 1, dtype=torch.long).unsqueeze(0))
 
-
     def _model_decode(self, trg_seq, enc_output, src_mask):
         trg_mask = get_subsequent_mask(trg_seq)
         dec_output, *_ = self.model.decoder(trg_seq, trg_mask, enc_output, src_mask)
 
         return F.softmax(self.model.trg_word_prj(dec_output), dim=-1)
-
 
     def _get_init_state(self, src_seq, src_mask):
         beam_size = self.beam_size
@@ -49,7 +47,6 @@ class Translator(nn.Module):
         enc_output = enc_output.repeat(beam_size, 1, 1)
 
         return enc_output, gen_seq, scores
-
 
     def _get_the_best_score_and_idx(self, gen_seq, dec_output, scores, step):
         assert len(scores.size()) == 1
@@ -73,7 +70,6 @@ class Translator(nn.Module):
         gen_seq[:, step] = best_k_idx
 
         return gen_seq, scores
-
 
     def translate_sentence(self, src_seq):
         # Only accept batch size equals to 1 in this function.
